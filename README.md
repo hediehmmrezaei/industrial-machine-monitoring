@@ -1,8 +1,8 @@
 # Industrial Machine Monitoring & Anomaly Detection
 
-**An end-to-end, polling-based industrial equipment monitoring prototype built with Python, PostgreSQL, scikit-learn, and Streamlit.**
+**Completed local portfolio project:** an end-to-end, polling-based industrial equipment monitoring prototype built with Python, PostgreSQL, scikit-learn, and Streamlit.
 
-> **Project status:** Working local educational prototype using **synthetic** sensor data. This project demonstrates an ML-enabled monitoring workflow; it is **not** a production deployment, a validated industrial fault detector, or a remaining-useful-life predictor.
+> **Project status: Completed — local demonstration.** The implemented pipeline, database, automated prediction worker, and interactive dashboard have been tested together using **synthetic** data. This is a finished educational/portfolio deliverable, **not** a production deployment, a validated industrial fault detector, or a remaining-useful-life predictor.
 
 ## Table of contents
 
@@ -21,8 +21,7 @@
 13. [SQL examples and useful checks](#13-sql-examples-and-useful-checks)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Design decisions and lessons learned](#15-design-decisions-and-lessons-learned)
-16. [Known limitations and next steps](#16-known-limitations-and-next-steps)
-17. [Repository publishing checklist](#17-repository-publishing-checklist)
+16. [Scope and known limitations](#16-scope-and-known-limitations)
 
 ---
 
@@ -81,7 +80,7 @@ flowchart TD
 
 ## 3. Project files and responsibilities
 
-The descriptions below are based on the actual uploaded Python files, not filenames alone.
+The table documents the roles of the scripts used in the completed learning project. Some scripts are exploratory milestones; `batch_predict.py`, `auto_predict.py`, and `app.py` form the main monitoring demonstration.
 
 | File | Purpose | Inputs | Outputs / side effects | When to run |
 |---|---|---|---|---|
@@ -98,7 +97,10 @@ The descriptions below are based on the actual uploaded Python files, not filena
 | `analyze_downtime.py` | Separate introductory analysis of machine downtime, stop counts, and illustrative availability | `downtime_events`, `machines` | Console summaries and bar chart | Optional operations analysis; not part of the anomaly worker |
 | `requirements.txt` | Lists direct Python package dependencies | — | Reproducible installation target | Install once in a new virtual environment |
 | `.gitignore` | Prevents common local/generated files from being newly tracked | — | Git exclusions | Keep in repository |
-| `README.md` | Explains the system and how to run it | — | Project documentation | Read first |
+| `README.md` | Explains the completed system, development decisions, and how to run it | — | Project documentation | Read first |
+| `schema.sql` | Exports the PostgreSQL table definitions and constraints | PostgreSQL schema | Database structure | Run once when initializing a fresh database |
+| `seed.sql` | Exports example rows for the local demonstration | Sample PostgreSQL records | Reproducible demo records | Run once after `schema.sql` |
+| `assets/` | Contains screenshots used by this README | Streamlit screenshots | Visual documentation | No execution needed |
 
 ### Important relationships
 
@@ -297,7 +299,7 @@ Anomaly precision was approximately **0.91** and recall **1.00** for that specif
 
 **Caution:** The test segment was examined during iterative project development, so it should not be described as a fully untouched, independent benchmark. The anomalies are also intentionally large and simple. These scores are a demonstration of the pipeline, **not evidence of production accuracy**.
 
-For future validation: reserve a new holdout dataset, add subtler fault scenarios, evaluate by machine and operating regime, and measure false alerts per operating hour.
+These results are reported only for the completed synthetic experiment. Real-world validation would require an independently held-out dataset, subtler fault scenarios, machine-specific evaluation, and false-alert measurements per operating hour; none of those is claimed here.
 
 ## 8. How predictions reach the dashboard
 
@@ -345,7 +347,7 @@ No sensor data found.
 New predictions saved: 0
 ```
 
-Here **“No sensor data found” means no *unprocessed* sensor rows were found**, not that the `sensor_readings` table is empty. The current message wording could be improved to avoid confusion.
+Here **“No sensor data found” means no *unprocessed* sensor rows were found**, not that the `sensor_readings` table is empty. The message is a property of the completed implementation; read it as **no pending readings**, not **no measurements in the database**.
 
 ### 8.4 Automatic prediction worker
 
@@ -361,7 +363,7 @@ The worker must remain running in its terminal. It is **not** a macOS background
 
 The code avoids duplicates at both levels: `WHERE NOT EXISTS` selects only unprocessed rows, and the unique database constraint plus `ON CONFLICT` protects the insert. This is a good educational introduction to **idempotent processing**.
 
-However, the implementation has no durable job queue, retry backoff, or concurrency coordination. A row with invalid or missing feature values could make a batch fail until the data is fixed. A production pipeline should validate input, isolate bad rows, and record per-reading failures.
+However, the implementation has no durable job queue, retry backoff, or concurrency coordination. A row with invalid or missing feature values could make a batch fail until the data is fixed. A production-grade system would need stronger input validation, isolation of invalid rows, and per-reading failure records; those are outside the scope of this completed demonstration.
 
 ## 9. Dashboard behavior
 
@@ -380,6 +382,28 @@ The Streamlit interface provides:
 5. **Vibration chart:** equivalent visualization for vibration.
 6. **Recent Anomaly Alerts:** a table of flagged readings sorted newest first.
 7. **Manual Refresh Data button** and **automatic 30-second rerun** via `streamlit-autorefresh`.
+
+### Screenshots from the completed local demonstration
+
+The following four screenshots show the **Paper Rewinder** selected with the full demonstration time interval (22 October 2026, 08:00–08:30). The interface shows **7 scored readings**, **4 model-flagged anomalies**, and the latest status **`ANOMALY`**. These are recorded demonstration values, not guaranteed values after a fresh database setup.
+
+**Dashboard overview — machine selector, time filters, and summary metrics**
+
+![Streamlit dashboard showing machine selection, time filters, 7 readings, 4 anomalies, and latest ANOMALY status](assets/dashboard-overview.png)
+
+**Temperature monitoring — blue time-series trace with red anomaly markers**
+
+![Temperature time-series with highlighted model-classified anomalies](assets/temperature-monitoring.png)
+
+**Vibration monitoring — the same classified records displayed against vibration**
+
+![Vibration time-series with highlighted model-classified anomalies](assets/vibration-monitoring.png)
+
+**Recent anomaly alerts — newest flagged measurements appear first**
+
+![Recent anomaly alerts table with timestamps, temperature, vibration, and predicted status](assets/anomaly-alerts.png)
+
+**How to interpret the screenshots:** The red markers are generated from stored `predicted_status` values, not from simple temperature or vibration thresholds. The Isolation Forest considers **all four** features (`temperature_c`, `vibration_mm_s`, `motor_current_a`, and `speed_rpm`). The dashboard presents two of those features visually. An anomaly is an unusual multivariate pattern, **not** a confirmed failure or downtime event.
 
 ### Important UI details
 
@@ -409,7 +433,7 @@ logging.basicConfig(
 
 It records polling attempts, successful child-process execution, and the child script's standard output. If `batch_predict.py` exits with a nonzero code, `subprocess.CalledProcessError` is caught and the error is written to the log. A `WARNING` line also records that the pipeline needs attention.
 
-**This warning is not an email, SMS, or push notification.** It is a message in a local file. The current script does not implement the proposed “alert only after three consecutive failures” enhancement.
+**This warning is not an email, SMS, or push notification.** It is a message in a local file. The completed script does not send operator notifications or implement a consecutive-failure alert rule.
 
 Useful commands:
 
@@ -453,9 +477,20 @@ Create the database from a connection to PostgreSQL's administrative database, i
   -c 'CREATE DATABASE industrial_monitoring;'
 ```
 
-**Critical reproducibility note:** The uploaded source archive does **not** contain a clean SQL schema/migration/seed script for recreating the database from scratch. The database tables were created interactively during development. Therefore `CREATE DATABASE` alone is **not sufficient** to run the dashboard: `machines`, `sensor_readings`, and `anomaly_predictions` must also be created, with the relationships described above, and example rows inserted. A future `database/schema.sql` and `database/seed.sql` are needed for a fully reproducible public release.
+### Initialize the database from the included SQL exports
 
-The archive contains a local PostgreSQL backup, but **do not publish backups by default**; they can include data and account-specific information. Restoring an untrusted backup is also unsafe. For a public repository, provide reviewed SQL migrations and synthetic seed data instead.
+The completed repository includes **`schema.sql`** (the exported table structure, keys, and constraints) and **`seed.sql`** (example local demonstration records). They were exported from the working PostgreSQL database to document the database layer and support recreation of the demo.
+
+For a **new, empty** `industrial_monitoring` database, run these commands from the project directory:
+
+```bash
+/Applications/Postgres.app/Contents/Versions/18/bin/psql -d industrial_monitoring -f schema.sql
+/Applications/Postgres.app/Contents/Versions/18/bin/psql -d industrial_monitoring -f seed.sql
+```
+
+**Run these only for a fresh database.** Importing the seed into a populated database can cause primary-key/unique-key conflicts or duplicate demo records. These SQL exports were generated locally; their restore into a completely new environment has not been independently verified here. Inspect the files before executing them, particularly when using a different PostgreSQL version or account.
+
+The original local `.dump` backup is not required for this README and should **not** be published to GitHub. The reviewed SQL exports are the intended shareable database setup files.
 
 ### Build the offline model artifact
 
@@ -643,9 +678,9 @@ The database was renamed to `industrial_monitoring` to make the project independ
 
 `machine_dashboard.py` documents an earlier Matplotlib-based monitoring milestone. `app.py` is the interactive application used for the final demonstration. Keeping both shows the development progression, but the README should identify Streamlit as the primary UI.
 
-## 16. Known limitations
+## 16. Scope and known limitations
 
-### Current limitations
+### Boundaries of the completed implementation
 
 - **No real data acquisition:** readings are inserted manually for the demonstration.
 - **Synthetic evaluation:** the injected anomalies are artificial and relatively easy to separate.
@@ -655,7 +690,7 @@ The database was renamed to `industrial_monitoring` to make the project independ
 - **Limited input validation:** missing, malformed, or out-of-distribution sensor values are not robustly handled.
 - **No model lifecycle management:** no model version table, drift detection, retraining policy, or rollback.
 - **No production deployment:** worker depends on an open local terminal; no Docker, scheduler, health endpoint, authentication, or observability service.
-- **Database bootstrap missing:** the current source does not include tested schema migrations and seed scripts.
+- **Database setup uses SQL exports:** `schema.sql` and `seed.sql` are included, but an automated clean-install test and migration framework are not implemented.
 - **No automated tests or CI:** behavior has been checked manually in the local learning environment.
 - **No alert delivery:** log warnings are not notifications to operators.
 - **Hardcoded connection URL:** not suitable for portable or credential-managed deployment.
@@ -666,4 +701,4 @@ The database was renamed to `industrial_monitoring` to make the project independ
 
 This project connects **data engineering fundamentals**, **unsupervised machine learning**, **persistent prediction storage**, **automated batch polling**, and **interactive visualization** into one working local demonstration. Its strongest engineering lesson is the **connection between components**: a sensor row must be stored, selected for inference, scored, persisted, joined back to its source measurement, and included in the user's selected dashboard view.
 
-The implementation is intentionally transparent about its limitations so that future work can focus on reliability, reproducibility, realistic evaluation, and industrial integration rather than overstating a synthetic prototype.
+The implementation is documented as a **completed local educational project**. The limitations above define what the finished demonstration does and does not establish; they are not a list of unfinished tasks or promised features.
