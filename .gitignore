@@ -1,0 +1,32 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.*
+
+# Database backups
+*.dump
+*.backup
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+# Project archives
+*.zip
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Local database files
+*.sqlite
+*.sqlite3
