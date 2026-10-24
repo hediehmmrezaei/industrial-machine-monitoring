@@ -643,7 +643,7 @@ The database was renamed to `industrial_monitoring` to make the project independ
 
 `machine_dashboard.py` documents an earlier Matplotlib-based monitoring milestone. `app.py` is the interactive application used for the final demonstration. Keeping both shows the development progression, but the README should identify Streamlit as the primary UI.
 
-## 16. Known limitations and next steps
+## 16. Known limitations
 
 ### Current limitations
 
@@ -659,32 +659,6 @@ The database was renamed to `industrial_monitoring` to make the project independ
 - **No automated tests or CI:** behavior has been checked manually in the local learning environment.
 - **No alert delivery:** log warnings are not notifications to operators.
 - **Hardcoded connection URL:** not suitable for portable or credential-managed deployment.
-
-### Prioritized improvements
-
-1. Add `database/schema.sql`, `database/seed.sql`, and an automated database setup test.
-2. Move the database URL and refresh intervals into environment-based configuration.
-3. Refactor shared model loading and prediction logic into reusable functions.
-4. Add validation for sensor ranges, null values, timestamp ordering, and empty data.
-5. Add unit tests for threshold classification and integration tests for idempotent database writes.
-6. Add explicit `model_version`, inference provenance, and safe model replacement.
-7. Package the worker as a managed service or container; add restart behavior and health checks.
-8. Add monitoring for worker health, unprocessed queue depth, processing latency, and model score drift.
-9. Evaluate on realistic multi-machine datasets with subtle and diverse fault modes.
-10. Consider PLC/SCADA/OPC UA or MQTT integration **only after** the data contracts and reliability requirements are defined.
-
-## 17. Repository publishing checklist
-
-Before making the project public:
-
-- [ ] Keep `.venv/`, `.git/`, `*.dump`, `*.backup`, `*.log`, `.env*`, and macOS metadata out of the repository.
-- [ ] Remove the nested ZIP file (`industrial-monitoring-source.zip`) and any accidental source archives from the tracked project.
-- [ ] Inspect `git status` and `git ls-files` to ensure sensitive/generated files were not already committed. `.gitignore` does **not** remove previously tracked files or their history.
-- [ ] Decide whether to include the synthetic CSV and model artifact; document provenance, file sizes, and model compatibility if included.
-- [ ] Add a reviewed database schema and synthetic seed script so a new developer can reproduce the app.
-- [ ] Verify installation in a clean virtual environment.
-- [ ] Add a dashboard screenshot and an architecture diagram once their final versions are available.
-- [ ] Verify that all reported metrics clearly say **synthetic data**, and do not describe the project as production deployed.
 
 ---
 
